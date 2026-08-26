@@ -1,0 +1,15 @@
+
+# Normalize line endings and silence LF/CRLF warnings on Windows
+* text=auto eol=lf
+
+# Explicitly mark binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.whl binary
+*.pyc binary
+*.db binary
+*.sqlite3 binary

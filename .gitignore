@@ -1,0 +1,89 @@
+# ===== Runtime-generated data (any path, NEVER commit) =====
+# SQLite + Chroma DB files
+**/pdf_chatbot.db
+**/pdf_chatbot.db-journal
+**/pdf_chatbot.db-wal
+**/pdf_chatbot.db-shm
+**/chroma.sqlite3
+**/chroma_db/
+**/uploads/
+data/
+
+# ===== Secrets / Environment =====
+.env
+.env.local
+.env.*.local
+# NOTE: .env.example files are templates (placeholder secrets) and ARE OK to commit
+
+# ===== Python =====
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments (any path)
+**/.venv/
+**/venv/
+**/ENV/
+**/env/
+
+# ===== Node / Frontend =====
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+frontend/.env
+frontend/.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ===== IDE / Editor =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===== Testing / Coverage =====
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# ===== Jupyter =====
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
