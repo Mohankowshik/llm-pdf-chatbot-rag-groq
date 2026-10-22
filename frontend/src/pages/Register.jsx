@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 function Register() {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -13,7 +15,7 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      await axios.post('http://localhost:8000/auth/register', { username, email, password })
+      await axios.post(`${API_BASE}/auth/register`, { username, email, password })
       setSuccess('Registration successful! Redirecting to login...')
       setTimeout(() => navigate('/login'), 2000)
     } catch (err) {

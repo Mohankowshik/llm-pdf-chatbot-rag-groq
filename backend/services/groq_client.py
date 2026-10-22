@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from groq import Groq
 try:
     from backend.config import settings
@@ -6,7 +7,7 @@ except ImportError:
 
 
 def generate_response(prompt: str):
-    """Generate response using Groq API (Llama 3.1 8B)."""
+    """Generate response using Groq API (Llama 3.3 70B)."""
     api_key = settings.GROQ_API_KEY
     if not api_key:
         raise ValueError("GROQ_API_KEY is not set in environment variables.")
@@ -19,7 +20,7 @@ def generate_response(prompt: str):
                 "content": prompt,
             }
         ],
-        model="llama-3.1-8b-instant",
+        model="openai/gpt-oss-120b",
         temperature=0.1,
     )
     return chat_completion.choices[0].message.content

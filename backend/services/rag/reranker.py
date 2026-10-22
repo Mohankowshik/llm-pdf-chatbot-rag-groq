@@ -1,4 +1,5 @@
 
+# pyrefly: ignore [missing-import]
 from sentence_transformers import CrossEncoder
 from typing import List, Dict, Any
 import os
@@ -10,10 +11,10 @@ _reranker_model = None
 
 
 def get_reranker_model():
-    """Get singleton cross-encoder reranker instance (BAAI/bge-reranker-base for speed and accuracy)."""
+    """Get singleton cross-encoder reranker instance (ms-marco-MiniLM-L-6-v2 for ultra-fast reranking)."""
     global _reranker_model
     if _reranker_model is None:
-        _reranker_model = CrossEncoder('BAAI/bge-reranker-base')
+        _reranker_model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
     return _reranker_model
 
 

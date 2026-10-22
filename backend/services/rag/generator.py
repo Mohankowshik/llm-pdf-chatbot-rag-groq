@@ -1,4 +1,5 @@
 
+# pyrefly: ignore [missing-import]
 from groq import Groq
 from typing import Optional
 try:
@@ -23,7 +24,7 @@ def get_groq_client():
 
 def generate_response(
     prompt: str,
-    model: str = "llama-3.1-8b-instant",
+    model: str = "openai/gpt-oss-120b",
     temperature: float = 0.1
 ) -> str:
     """Generate a response using Groq API with streaming support (optional)."""

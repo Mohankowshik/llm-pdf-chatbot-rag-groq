@@ -10,19 +10,17 @@ _embedding_model = None
 
 
 def get_embedding_model():
-    """Get singleton embedding model instance (BAAI/bge-base-en-v1.5 for good speed and accuracy)."""
+    """Get singleton embedding model instance (all-MiniLM-L6-v2 for ultra-fast CPU inference and low latency)."""
     global _embedding_model
     if _embedding_model is None:
-        # Use bge-base-en-v1.5 for a good balance of speed and accuracy
-        _embedding_model = SentenceTransformer('BAAI/bge-base-en-v1.5')
+        _embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
     return _embedding_model
 
 
 def generate_embeddings(texts: List[str]) -> List[List[float]]:
     """Generate embeddings for a list of texts with batching."""
     model = get_embedding_model()
-    # Batch size of 32 is good for performance on most systems
-    return model.encode(texts, show_progress_bar=False, batch_size=32).tolist()
+    return model.encode(texts, show_progress_bar=False, batch_size=64).tolist()
 
 
 def generate_embedding(text: str) -> List[float]:
@@ -32,11 +30,12 @@ def generate_embedding(text: str) -> List[float]:
 
 
 def get_query_prefix():
-    """Get the required query prefix for bge models (for better retrieval)."""
-    return "Represent this question for retrieving supporting documents: "
+    """Prefix for queries (empty for all-MiniLM-L6-v2)."""
+    return ""
 
 
 def get_document_prefix():
-    """Get the required document prefix for bge models."""
-    return "Represent this document for retrieval: "
+    """Prefix for documents (empty for all-MiniLM-L6-v2)."""
+    return ""
+
 
