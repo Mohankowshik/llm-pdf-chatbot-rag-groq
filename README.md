@@ -199,12 +199,12 @@ The backend cannot run on Vercel: it keeps state on disk (uploaded PDFs and the
 ChromaDB store), needs a raw MySQL connection, and loads PyTorch plus two
 transformer models — well past Vercel's 250 MB serverless bundle limit with no
 persistent filesystem. So the frontend is served by Vercel and the backend runs
-as a container on Render.
+on Render using its native Python runtime (no Docker required).
 
 **a. Deploy the backend to Render**
 
-1. Create a MySQL instance (Render, Railway, PlanetScale, or Aiven) and note its
-   connection URL.
+1. Create a MySQL instance and note its connection URL. Render does not offer
+   managed MySQL, so use a provider such as Aiven, Railway or PlanetScale.
 2. In Render, choose **New → Blueprint** and point it at this repository. It reads
    [render.yaml](render.yaml).
 3. When prompted, set the two secret variables:
@@ -212,6 +212,10 @@ as a container on Render.
    - `DATABASE_URL` — e.g. `mysql+pymysql://user:pass@host:3306/dbname`
 4. Deploy and confirm `https://<your-service>.onrender.com/` returns
    `{"message":"PDF Chatbot API is running!"}`.
+
+The blueprint pins `plan: starter` because the embedding and reranker models
+exceed a 512 MB free instance. Change that line to `free` to try it at no cost,
+but expect possible out-of-memory crashes on the first request.
 
 **b. Deploy the frontend to Vercel**
 
@@ -226,8 +230,9 @@ as a container on Render.
 
 **Persistence note:** Render's filesystem is wiped on every restart, which clears
 the uploaded PDFs and the vector store (chat history in MySQL is unaffected).
-Attaching a persistent disk mounted at `/data` keeps them — the `UPLOAD_DIR`,
-`CHROMA_DIR` and `HF_HOME` variables in `render.yaml` already point there.
+Attaching a persistent disk mounted at `/data` keeps them — on `starter` and above
+you can then set `UPLOAD_DIR=/data/uploads`, `CHROMA_DIR=/data/chroma_db` and
+`HF_HOME=/data/hf_cache` so the models are cached across restarts too.
 
 ## Usage
 

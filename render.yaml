@@ -1,16 +1,21 @@
 services:
   - type: web
     name: pdf-chatbot-api
-    runtime: docker
+    runtime: python
     region: singapore
     # The RAG pipeline loads torch + two transformer models, so it needs more
     # RAM than the free instance provides. Switch to `free` only if you accept
     # possible out-of-memory crashes on the first request.
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /
     envVars:
+      # Pin the interpreter: torch and sentence-transformers do not yet publish
+      # wheels for the newest Python releases that Render may default to.
+      - key: PYTHON_VERSION
+        value: "3.11.9"
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
@@ -22,11 +27,10 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
-      # Keep uploads, the vector store and model cache under one mount path so
-      # that attaching a persistent disk at /data makes them survive restarts.
+      # Relative to backend/. If you later attach a persistent disk mounted at
+      # /data, point these at /data/uploads and /data/chroma_db to survive
+      # restarts, and set HF_HOME=/data/hf_cache to cache the models too.
       - key: UPLOAD_DIR
-        value: /data/uploads
+        value: uploads
       - key: CHROMA_DIR
-        value: /data/chroma_db
-      - key: HF_HOME
-        value: /data/hf_cache
+        value: chroma_db
