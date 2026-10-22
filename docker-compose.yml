@@ -1,19 +1,20 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
+  mysql:
+    image: mysql:8.0
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-password}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-pdf_chatbot}
+      - MYSQL_USER=${MYSQL_USER:-user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-password}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     ports:
-      - "5432:5432"
+      - "3306:3306"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-password}"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
@@ -32,9 +33,9 @@ services:
       - CHUNK_SIZE=1000
       - CHUNK_OVERLAP=200
       - TOP_K=3
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - DATABASE_URL=mysql+pymysql://${MYSQL_USER:-user}:${MYSQL_PASSWORD:-password}@mysql:3306/${MYSQL_DATABASE:-pdf_chatbot}
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
 
   frontend:
@@ -45,4 +46,5 @@ services:
       - backend
 
 volumes:
-  postgres_data:
+  mysql_data:
+

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 function Login({ setToken }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -14,7 +16,7 @@ function Login({ setToken }) {
       const formData = new FormData()
       formData.append('username', username)
       formData.append('password', password)
-      const res = await axios.post('http://localhost:8000/auth/login', formData)
+      const res = await axios.post(`${API_BASE}/auth/login`, formData)
       localStorage.setItem('token', res.data.access_token)
       setToken(res.data.access_token)
       navigate('/')

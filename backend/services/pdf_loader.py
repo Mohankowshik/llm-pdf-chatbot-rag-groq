@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 import fitz  # PyMuPDF
 from typing import List, Tuple
 import os

@@ -17,9 +17,12 @@ class Settings(BaseSettings):
     CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "1000"))
     CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "200"))
     TOP_K: int = int(os.getenv("TOP_K", "3"))
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./pdf_chatbot.db")
-    UPLOAD_DIR: str = "uploads"
-    CHROMA_DIR: str = "chroma_db"
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        "mysql+pymysql://root:password@localhost:3306/pdf_chatbot"
+    )
+    UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
+    CHROMA_DIR: str = os.getenv("CHROMA_DIR", "chroma_db")
 
 
 settings = Settings()

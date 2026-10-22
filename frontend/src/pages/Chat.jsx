@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 function Chat({ token }) {
   const [files, setFiles] = useState([])
   const [uploadedFiles, setUploadedFiles] = useState([])
@@ -24,7 +26,7 @@ function Chat({ token }) {
     // Fetch initial chat history
     const fetchHistory = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/api/history', {
+        const res = await axios.get(`${API_BASE}/api/history`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         if (res.data && res.data.history) {
@@ -37,6 +39,9 @@ function Chat({ token }) {
         }
       } catch (err) {
         console.error('Failed to load chat history:', err)
+        if (err.response?.status === 401) {
+          handleLogout()
+        }
       }
     }
 
@@ -60,18 +65,29 @@ function Chat({ token }) {
       newFileNames.push(files[i].name)
     }
     try {
-      const res = await axios.post('http://localhost:8000/api/upload', formData, {
+      const res = await axios.post(`${API_BASE}/api/upload`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       })
-      setUploadStatus('Files processed and indexed successfully!')
-      setUploadedFiles(prev => Array.from(new Set([...prev, ...newFileNames])))
-      setFiles([])
+      const failed = res.data?.results?.filter(r => r.status === 'failed') || []
+      if (failed.length > 0) {
+        setUploadStatus(`Upload completed with errors: ${failed.map(f => `${f.filename}: ${f.error}`).join(', ')}`)
+      } else {
+        setUploadStatus('Files processed and indexed successfully!')
+        setUploadedFiles(prev => Array.from(new Set([...prev, ...newFileNames])))
+        setFiles([])
+      }
     } catch (err) {
       console.error(err)
-      setUploadStatus('Upload failed. Please ensure files are valid PDFs.')
+      if (err.response?.status === 401) {
+        setUploadStatus('Session expired. Please log in again.')
+        setTimeout(() => handleLogout(), 1500)
+      } else {
+        const errorDetail = err.response?.data?.detail || err.message || 'Upload failed. Please try again.'
+        setUploadStatus(`Upload failed: ${errorDetail}`)
+      }
     } finally {
       setUploading(false)
     }
@@ -85,14 +101,20 @@ function Chat({ token }) {
     setInput('')
     setLoading(true)
     try {
-      const res = await axios.post('http://localhost:8000/api/chat', { question }, {
+      const res = await axios.post(`${API_BASE}/api/chat`, { question }, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const botMessage = { role: 'assistant', content: res.data.answer, sources: res.data.sources }
       setMessages(prev => [...prev, botMessage])
     } catch (err) {
       console.error(err)
-      setMessages(prev => [...prev, { role: 'assistant', content: 'An error occurred while generating the answer. Please try again.' }])
+      if (err.response?.status === 401) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Your session has expired. Please log in again.' }])
+        setTimeout(() => handleLogout(), 2000)
+      } else {
+        const detail = err.response?.data?.detail || 'An error occurred while generating the answer. Please try again.'
+        setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${detail}` }])
+      }
     } finally {
       setLoading(false)
     }

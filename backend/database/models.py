@@ -11,9 +11,9 @@ except ImportError:
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+    username = Column(String(255), unique=True, index=True)
+    email = Column(String(255), unique=True, index=True)
+    hashed_password = Column(String(255))
     uploads = relationship("PDFUpload", back_populates="owner")
     chats = relationship("ChatHistory", back_populates="user")
 
@@ -21,8 +21,8 @@ class User(Base):
 class PDFUpload(Base):
     __tablename__ = "pdf_uploads"
     id = Column(Integer, primary_key=True, index=True)
-    filename = Column(String)
-    file_path = Column(String)
+    filename = Column(String(255))
+    file_path = Column(String(500))
     upload_date = Column(DateTime, default=datetime.utcnow)
     user_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="uploads")

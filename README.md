@@ -16,7 +16,7 @@ A production-ready web application that allows users to upload PDF documents and
 - ChatGPT-style UI
 - Conversation history
 - Error handling
-- Admin logging to SQLite database
+- Relational logging to MySQL database
 - Docker support
 
 ## Tech Stack
@@ -36,15 +36,19 @@ A production-ready web application that allows users to upload PDF documents and
 - sentence-transformers
 - ChromaDB
 - SQLAlchemy
+- PyMySQL
 - python-jose[cryptography]
 - passlib[bcrypt]
 - python-dotenv
 - groq
 
 ### Database
-- SQLite
+- MySQL (Relational DB)
+- ChromaDB (Vector DB)
 
 ### Deployment
+- Vercel (frontend, static Vite build)
+- Render (backend, Docker)
 - Docker
 - Docker Compose
 
@@ -63,12 +67,19 @@ A production-ready web application that allows users to upload PDF documents and
 │   │   ├── upload.py
 │   │   └── chat.py
 │   ├── services/
-│   │   ├── pdf_loader.py
-│   │   ├── chunker.py
-│   │   ├── embeddings.py
-│   │   ├── vector_store.py
 │   │   ├── groq_client.py
-│   │   └── rag_pipeline.py
+│   │   └── rag/
+│   │       ├── loader.py
+│   │       ├── cleaner.py
+│   │       ├── chunker.py
+│   │       ├── embeddings.py
+│   │       ├── retriever.py
+│   │       ├── query_rewriter.py
+│   │       ├── reranker.py
+│   │       ├── prompt.py
+│   │       ├── memory.py
+│   │       ├── generator.py
+│   │       └── pipeline.py
 │   ├── database/
 │   │   ├── db.py
 │   │   └── models.py
@@ -77,10 +88,12 @@ A production-ready web application that allows users to upload PDF documents and
 ├── frontend/
 │   ├── package.json
 │   ├── vite.config.js
+│   ├── vercel.json
 │   ├── tailwind.config.js
 │   ├── postcss.config.js
 │   ├── index.html
 │   ├── Dockerfile
+│   ├── .env.example
 │   └── src/
 │       ├── main.jsx
 │       ├── index.css
@@ -89,6 +102,7 @@ A production-ready web application that allows users to upload PDF documents and
 │           ├── Login.jsx
 │           ├── Register.jsx
 │           └── Chat.jsx
+├── render.yaml
 ├── docker-compose.yml
 └── README.md
 ```
@@ -150,7 +164,13 @@ b. Install dependencies
 npm install
 ```
 
-c. Run the dev server
+c. Configure the API URL (optional — defaults to `http://localhost:8000`)
+```bash
+cp .env.example .env
+# Edit .env and set VITE_API_URL if the backend runs elsewhere
+```
+
+d. Run the dev server
 ```bash
 npm run dev
 ```
@@ -173,6 +193,42 @@ docker-compose up --build
 The backend will be at `http://localhost:8000`
 The frontend will be at `http://localhost:3000`
 
+### 5. Production Deployment (Vercel + Render)
+
+The backend cannot run on Vercel: it keeps state on disk (uploaded PDFs and the
+ChromaDB store), needs a raw MySQL connection, and loads PyTorch plus two
+transformer models — well past Vercel's 250 MB serverless bundle limit with no
+persistent filesystem. So the frontend is served by Vercel and the backend runs
+as a container on Render.
+
+**a. Deploy the backend to Render**
+
+1. Create a MySQL instance (Render, Railway, PlanetScale, or Aiven) and note its
+   connection URL.
+2. In Render, choose **New → Blueprint** and point it at this repository. It reads
+   [render.yaml](render.yaml).
+3. When prompted, set the two secret variables:
+   - `GROQ_API_KEY` — your Groq API key
+   - `DATABASE_URL` — e.g. `mysql+pymysql://user:pass@host:3306/dbname`
+4. Deploy and confirm `https://<your-service>.onrender.com/` returns
+   `{"message":"PDF Chatbot API is running!"}`.
+
+**b. Deploy the frontend to Vercel**
+
+1. In Vercel, choose **Add New → Project** and import this repository.
+2. Set **Root Directory** to `frontend`. Vercel detects Vite automatically and
+   uses [vercel.json](frontend/vercel.json) for the SPA rewrite.
+3. Add an environment variable for the Production (and Preview) environment:
+   - `VITE_API_URL` = your Render backend URL, e.g. `https://pdf-chatbot-api.onrender.com`
+   - No trailing slash.
+4. Deploy. `VITE_API_URL` is inlined at build time, so **redeploy whenever the
+   backend URL changes**.
+
+**Persistence note:** Render's filesystem is wiped on every restart, which clears
+the uploaded PDFs and the vector store (chat history in MySQL is unaffected).
+Attaching a persistent disk mounted at `/data` keeps them — the `UPLOAD_DIR`,
+`CHROMA_DIR` and `HF_HOME` variables in `render.yaml` already point there.
+
 ## Usage
 
 1. Register a new account or login with an existing one
@@ -191,7 +247,12 @@ You can configure the following settings in `backend/.env` or `docker-compose.ym
 - `CHUNK_SIZE`: Size of text chunks for embedding (default: 1000)
 - `CHUNK_OVERLAP`: Overlap between consecutive chunks (default: 200)
 - `TOP_K`: Number of relevant chunks to retrieve (default: 3)
-- `DATABASE_URL`: SQLite database URL
+- `DATABASE_URL`: MySQL database connection URL (e.g. `mysql+pymysql://root:password@localhost:3306/pdf_chatbot`)
+- `UPLOAD_DIR`: Where uploaded PDFs are stored (default: `uploads`)
+- `CHROMA_DIR`: Where the ChromaDB vector store is persisted (default: `chroma_db`)
+
+Frontend settings live in `frontend/.env`:
+- `VITE_API_URL`: Base URL of the backend API (default: `http://localhost:8000`)
 
 ## License
 
