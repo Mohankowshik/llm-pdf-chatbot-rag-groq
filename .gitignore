@@ -64,6 +64,10 @@ pnpm-debug.log*
 .yarn/install-state.gz
 .pnp.*
 
+# ===== Logs / debug output =====
+*.log
+*_log.txt
+
 # ===== IDE / Editor =====
 .vscode/
 .idea/
